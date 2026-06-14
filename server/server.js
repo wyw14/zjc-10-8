@@ -118,7 +118,7 @@ app.get('/api/today', (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: '服务器错�? });
+    res.status(500).json({ success: false, message: '服务器错误' });
   }
 });
 
@@ -151,7 +151,7 @@ app.post('/api/answer', (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: '服务器错�? });
+    res.status(500).json({ success: false, message: '服务器错误' });
   }
 });
 
@@ -216,7 +216,7 @@ app.get('/api/history', (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: '服务器错�? });
+    res.status(500).json({ success: false, message: '服务器错误' });
   }
 });
 
@@ -229,13 +229,58 @@ app.get('/api/question-bank', (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: '服务器错�? });
+    res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
+app.get('/api/random-history', (req, res) => {
+  try {
+    const data = readData();
+    const todayStr = getDateString();
+    const answeredEntries = [];
+
+    for (const [date, entry] of Object.entries(data.answers)) {
+      if (date < todayStr && entry && entry.answered && entry.answer) {
+        answeredEntries.push({
+          date,
+          question: entry.question,
+          answer: entry.answer,
+          answeredAt: entry.answeredAt
+        });
+      }
+    }
+
+    if (answeredEntries.length === 0) {
+      return res.json({
+        success: true,
+        data: null
+      });
+    }
+
+    const randomIndex = Math.floor(Math.random() * answeredEntries.length);
+    const randomEntry = answeredEntries[randomIndex];
+
+    const recordDate = new Date(randomEntry.date);
+    const today = new Date();
+    const diffTime = Math.abs(today - recordDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    res.json({
+      success: true,
+      data: {
+        ...randomEntry,
+        daysAgo: diffDays
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: '服务器错误' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`每日问答后端服务已启�? http://localhost:${PORT}`);
+  console.log(`每日问答后端服务已启动 http://localhost:${PORT}`);
   const data = readData();
   ensureTodayQuestion(data);
-  console.log(`今日问题已准备就�? ${data.currentQuestion.question}`);
+  console.log(`今日问题已准备就绪 ${data.currentQuestion.question}`);
 });

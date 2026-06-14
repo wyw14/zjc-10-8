@@ -1,5 +1,31 @@
 <template>
   <div class="card">
+    <div class="random-section">
+      <button class="random-btn" @click="loadRandomHistory" :disabled="randomLoading">
+        🎲 {{ randomLoading ? '加载中...' : '随机回看' }}
+      </button>
+    </div>
+
+    <transition name="fade">
+      <div v-if="randomRecord" class="random-card">
+        <div class="random-header">
+          <span class="random-date">📅 {{ formatFullDate(randomRecord.date) }}</span>
+          <span class="days-ago">
+            {{ randomRecord.daysAgo === 0 ? '就是今天' : `距今 ${randomRecord.daysAgo} 天` }}
+          </span>
+        </div>
+        <div class="random-body">
+          <p class="q-text">❓ {{ randomRecord.question }}</p>
+          <p class="a-text">{{ randomRecord.answer }}</p>
+        </div>
+        <button class="close-random" @click="randomRecord = null">✕</button>
+      </div>
+    </transition>
+
+    <div v-if="noHistoryTip" class="empty-note">
+      还没有历史回答记录，先去回答几个问题吧~
+    </div>
+
     <div v-if="history && history.stats" class="stats-panel">
       <div class="stat-card green">
         <div class="stat-num">{{ history.stats.answeredCount }}</div>
@@ -81,10 +107,36 @@ const props = defineProps({
   loading: Boolean
 })
 
-defineEmits(['prev-month', 'next-month'])
+const emit = defineEmits(['prev-month', 'next-month'])
 
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 const selectedDay = ref(null)
+const randomRecord = ref(null)
+const randomLoading = ref(false)
+const noHistoryTip = ref(false)
+
+async function loadRandomHistory() {
+  randomLoading.value = true
+  noHistoryTip.value = false
+  try {
+    const res = await fetch('/api/random-history')
+    const json = await res.json()
+    if (json.success) {
+      if (json.data) {
+        randomRecord.value = json.data
+      } else {
+        noHistoryTip.value = true
+        setTimeout(() => {
+          noHistoryTip.value = false
+        }, 3000)
+      }
+    }
+  } catch (e) {
+    console.error('随机回看加载失败', e)
+  } finally {
+    randomLoading.value = false
+  }
+}
 
 const fullCalendar = computed(() => {
   if (!props.history?.calendar) return []

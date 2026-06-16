@@ -32,6 +32,15 @@ function getDayStartTimestamp(date = new Date()) {
   return d.getTime();
 }
 
+function diffDaysLocal(dateStr1, dateStr2) {
+  const [y1, m1, d1] = dateStr1.split('-').map(Number);
+  const [y2, m2, d2] = dateStr2.split('-').map(Number);
+  const date1 = new Date(y1, m1 - 1, d1);
+  const date2 = new Date(y2, m2 - 1, d2);
+  const diffTime = Math.abs(date2 - date1);
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
 function isNewDay(data) {
   const todayStr = getDateString();
   const todayStart = getDayStartTimestamp();
@@ -260,10 +269,7 @@ app.get('/api/random-history', (req, res) => {
     const randomIndex = Math.floor(Math.random() * answeredEntries.length);
     const randomEntry = answeredEntries[randomIndex];
 
-    const recordDate = new Date(randomEntry.date);
-    const today = new Date();
-    const diffTime = Math.abs(today - recordDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = diffDaysLocal(randomEntry.date, todayStr);
 
     res.json({
       success: true,

@@ -143,8 +143,9 @@ const fullCalendar = computed(() => {
   const cal = [...props.history.calendar]
   const firstDay = cal[0]
   if (!firstDay) return cal
-  const d = new Date(firstDay.date)
-  const firstWeekday = d.getDay()
+  const [y, m, d] = firstDay.date.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const firstWeekday = date.getDay()
   for (let i = 0; i < firstWeekday; i++) {
     cal.unshift(null)
   }
@@ -190,9 +191,10 @@ function selectDay(day) {
 
 function formatFullDate(dateStr) {
   if (!dateStr) return ''
-  const d = new Date(dateStr)
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
   const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${weekdays[d.getDay()]}`
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`
 }
 
 watch(() => props.history, () => {
